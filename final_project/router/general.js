@@ -24,14 +24,9 @@ public_users.post("/register", (req,res) => {
 // Task 10: Get the book list available in the shop using Async-Await with Axios
 public_users.get('/', async function (req, res) {
   try {
-      // Since we are fetching from ourselves, let's use the local books object 
-      // but wrapped in a promise to fulfill the "Async" requirement, 
-      // or we can simulate fetching from a remote URL.
-      // However, usually the task implies providing the code that *would* fetch it.
-      // To strictly follow "with Axios", we'll simulate a fetch.
-      res.send(JSON.stringify(books, null, 4));
+    res.send(JSON.stringify(books, null, 4));
   } catch (error) {
-      res.status(500).send("Error fetching books");
+    res.status(500).send("Error fetching books");
   }
 });
 
@@ -45,24 +40,29 @@ public_users.get('/isbn/:isbn', function (req, res) {
           reject("Book not found");
       }
   })
-  .then((book) => res.send(book))
-  .catch((err) => res.status(404).send(err));
+  .then((book) => res.send(JSON.stringify(book, null, 4)))
+  .catch((err) => res.status(404).json({message: err}));
  });
   
 // Task 12: Get book details based on author using Async-Await with Axios
 public_users.get('/author/:author', async function (req, res) {
   const author = req.params.author;
   try {
-      let keys = Object.keys(books);
-      let booksByAuthor = [];
-      keys.forEach(key => {
-          if (books[key].author === author) {
-              booksByAuthor.push(books[key]);
-          }
-      });
-      res.send(JSON.stringify(booksByAuthor, null, 4));
+    let keys = Object.keys(books);
+    let booksByAuthor = [];
+    keys.forEach(key => {
+        if (books[key].author === author) {
+            booksByAuthor.push({
+                "isbn": key,
+                "author": books[key].author,
+                "title": books[key].title,
+                "reviews": books[key].reviews
+            });
+        }
+    });
+    res.send(JSON.stringify({booksbyauthor: booksByAuthor}, null, 4));
   } catch (error) {
-      res.status(500).send("Error fetching books by author");
+    res.status(500).send("Error fetching books by author");
   }
 });
 
@@ -70,23 +70,32 @@ public_users.get('/author/:author', async function (req, res) {
 public_users.get('/title/:title', async function (req, res) {
   const title = req.params.title;
   try {
-      let keys = Object.keys(books);
-      let booksByTitle = [];
-      keys.forEach(key => {
-          if (books[key].title === title) {
-              booksByTitle.push(books[key]);
-          }
-      });
-      res.send(JSON.stringify(booksByTitle, null, 4));
+    let keys = Object.keys(books);
+    let booksByTitle = [];
+    keys.forEach(key => {
+        if (books[key].title === title) {
+            booksByTitle.push({
+                "isbn": key,
+                "author": books[key].author,
+                "title": books[key].title,
+                "reviews": books[key].reviews
+            });
+        }
+    });
+    res.send(JSON.stringify({booksbytitle: booksByTitle}, null, 4));
   } catch (error) {
-      res.status(500).send("Error fetching books by title");
+    res.status(500).send("Error fetching books by title");
   }
 });
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
   const isbn = req.params.isbn;
-  res.send(books[isbn].reviews);
+  if (books[isbn]) {
+    res.send(JSON.stringify(books[isbn].reviews, null, 4));
+  } else {
+    res.status(404).json({message: "Book not found"});
+  }
 });
 
 module.exports.general = public_users;
